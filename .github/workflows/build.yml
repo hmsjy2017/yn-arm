@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+  schedule:
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up multiarch/qemu-user-static
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
+      - uses: docker://multiarch/debian-debootstrap:arm64-bullseye
+        with:
+          args: >
+            bash -c
+            "apt update &&
+            apt install -y curl tar &&
+            curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n &&
+            bash n lts &&
+            cd /github/workspace &&
+            git clone --recursive https://github.com/purocean/yn.git &&
+            cd ./yn &&
+            mkdir bin &&
+            cd bin &&
+            wget https://github.com/jgm/pandoc/releases/download/2.17.1.1/pandoc-2.17.1.1-linux-arm64.tar.gz &&
+            tar -zxvf pandoc-2.17.1.1-linux-arm64.tar.gz &&
+            mv mv pandoc-2.17.1.1/bin/pandoc . &&
+            rm -rf pandoc-2.17.1.1/ &&
+            cd .. &&
+            yarn install &&
+            yarn build &&
+            yarn run electron-builder --linux -p never | sed 's/identityName=.*$//' &&
+            mv out/*.deb ../Yank-Note-arm64.deb
+            rm -rf yn"
+            
+      - name: Upload
+        run: |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git commit -m "Upload Yank-Note v$(curl -s https://api.github.com/repos/https://github.com/purocean/yn/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' | tr -d 'v')" 
+          git push
