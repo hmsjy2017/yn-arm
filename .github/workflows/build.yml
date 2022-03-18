@@ -22,7 +22,7 @@ jobs:
           args: >
             bash -c
             "apt update &&
-            apt install -y curl tar git &&
+            apt install -y curl wget tar git &&
             curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n &&
             bash n lts &&
             npm install --global yarn &&
