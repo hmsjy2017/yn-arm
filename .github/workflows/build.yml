@@ -22,9 +22,10 @@ jobs:
           args: >
             bash -c
             "apt update &&
-            apt install -y curl tar &&
+            apt install -y curl tar git &&
             curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n &&
             bash n lts &&
+            npm install --global yarn &&
             cd /github/workspace &&
             git clone --recursive https://github.com/purocean/yn.git &&
             cd ./yn &&
